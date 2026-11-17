@@ -1,0 +1,3 @@
+@model Memory
+@{ ViewData["Title"] = "Delete Memory"; }
+<main class="container dashboard-wrap"><section class="account-card mx-auto"><h1 class="section-title">Delete this memory?</h1><p>Are you sure you want to delete <strong>@Model.Title</strong>? This cannot be undone.</p><form asp-action="Delete" method="post"><input type="hidden" name="id" value="@Model.Id"><button class="btn btn-danger">Delete permanently</button> <a asp-action="Index" class="btn btn-outline-forest">Cancel</a></form></section></main>

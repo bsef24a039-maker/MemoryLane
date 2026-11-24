@@ -1,7 +1,119 @@
 @model IEnumerable<Memory>
-@{ ViewData["Title"] = "My Memories"; }
-<main class="container dashboard-wrap"><div class="welcome-strip"><div><p class="small-heading">YOUR MEMORY JOURNAL</p><h1 class="section-title">Recently Remembered</h1><p class="mb-0 muted">Your collection of moments and stories.</p></div><a asp-action="Create" class="btn btn-terracotta">＋ Add Memory</a></div>
-<form method="get" class="row g-2 mb-4"><div class="col-md-6"><input name="search" value="@ViewBag.Search" class="form-control" placeholder="Search your memories..."></div><div class="col-md-3"><select name="category" class="form-select"><option value="">All categories</option>@foreach(string c in (IEnumerable<string>)ViewBag.Categories){<option selected="@(ViewBag.Category == c)" value="@c">@c</option>}</select></div><div class="col-md-3"><button class="btn btn-outline-forest w-100">Search</button></div></form>
-<div class="row g-4">@foreach(var item in Model){<div class="col-md-4"><article class="journal-card">@if(!string.IsNullOrEmpty(item.ImagePath)){<img src="@item.ImagePath" alt="@item.Title">}else{<img src="https://images.unsplash.com/photo-1490730141103-6cac27aaab94?auto=format&fit=crop&w=700&q=80" alt="Memory placeholder">}<div class="journal-content"><span class="date-label">@item.MemoryDate.ToString("dd MMMM yyyy").ToUpper() · @item.Category.ToUpper()</span><h3>@item.Title</h3><p>@(item.Story.Length > 110 ? item.Story[..110] + "…" : item.Story)</p><div class="d-flex gap-2 mt-3"><a asp-action="Edit" asp-route-id="@item.Id" class="form-link">Edit</a><a asp-action="Delete" asp-route-id="@item.Id" class="form-link text-danger">Delete</a></div></div></article></div>}</div>
-@if(!Model.Any()){<div class="feature-paper text-center"><h3>Your story starts here</h3><p>No memories yet. Add your first moment.</p><a asp-action="Create" class="btn btn-terracotta mt-3">Add your first memory</a></div>}
+
+@{
+    ViewData["Title"] = "My Memories";
+}
+
+<main class="container dashboard-wrap">
+
+    <div class="welcome-strip">
+        <div>
+            <p class="small-heading">YOUR MEMORY JOURNAL</p>
+            <h1 class="section-title">Recently Remembered</h1>
+            <p class="mb-0 muted">Your collection of moments and stories.</p>
+        </div>
+
+        <a asp-action="Create" class="btn btn-terracotta">
+            ＋ Add Memory
+        </a>
+    </div>
+
+    <form id="searchForm" class="row g-2 mb-4">
+
+        <div class="col-md-6">
+            <input id="searchInput"
+                   name="search"
+                   value="@ViewBag.Search"
+                   class="form-control"
+                   placeholder="Search your memories...">
+        </div>
+
+        <div class="col-md-3">
+            <select id="categorySelect"
+                    name="category"
+                    class="form-select">
+
+                <option value="">All categories</option>
+
+                @foreach (string c in (IEnumerable<string>)ViewBag.Categories)
+                {
+                    <option value="@c"
+                            selected="@(ViewBag.Category == c)">
+                        @c
+                    </option>
+                }
+            </select>
+        </div>
+
+        <div class="col-md-3">
+            <button type="submit"
+                    class="btn btn-outline-forest w-100">
+                Search
+            </button>
+        </div>
+
+    </form>
+
+    <!-- AJAX results will appear here -->
+    <div id="memoryResults">
+        <partial name="_MemoryList" model="Model" />
+    </div>
+
 </main>
+
+@section Scripts {
+
+    <script>
+        const searchForm = document.getElementById("searchForm");
+        const searchInput = document.getElementById("searchInput");
+        const categorySelect = document.getElementById("categorySelect");
+        const memoryResults = document.getElementById("memoryResults");
+
+        const searchUrl = '@Url.Action("SearchAjax", "Memories")';
+
+        let searchTimer;
+
+        async function loadMemories() {
+
+            const params = new URLSearchParams();
+
+            params.append("search", searchInput.value);
+            params.append("category", categorySelect.value);
+
+            try {
+                const response = await fetch(
+                    searchUrl + "?" + params.toString()
+                );
+
+                if (!response.ok) {
+                    throw new Error("Unable to load memories.");
+                }
+
+                const html = await response.text();
+
+                memoryResults.innerHTML = html;
+            }
+            catch (error) {
+                memoryResults.innerHTML =
+                    '<p class="text-danger text-center">Something went wrong. Please try again.</p>';
+            }
+        }
+
+        searchForm.addEventListener("submit", function (event) {
+            event.preventDefault();
+            loadMemories();
+        });
+
+        searchInput.addEventListener("input", function () {
+            clearTimeout(searchTimer);
+
+            searchTimer = setTimeout(function () {
+                loadMemories();
+            }, 400);
+        });
+
+        categorySelect.addEventListener("change", function () {
+            loadMemories();
+        });
+    </script>
+}

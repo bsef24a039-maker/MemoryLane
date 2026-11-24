@@ -1,0 +1,69 @@
+﻿@model IEnumerable<Memory>
+
+@if (Model.Any())
+{
+    <div class="row g-4">
+
+        @foreach (var item in Model)
+        {
+            <div class="col-md-4">
+
+                <article class="journal-card">
+
+                    @if (!string.IsNullOrEmpty(item.ImagePath))
+                    {
+                        <img src="@item.ImagePath" alt="@item.Title">
+                    }
+                    else
+                    {
+                        <img src="https://images.unsplash.com/photo-1490730141103-6cac27aaab94?auto=format&fit=crop&w=700&q=80"
+                             alt="Memory placeholder">
+                    }
+
+                <div class="journal-content">
+
+                    <span class="date-label">
+                        @item.MemoryDate.ToString("dd MMMM yyyy").ToUpper()
+                        · @item.Category.ToUpper()
+                    </span>
+
+                    <h3>@item.Title</h3>
+
+                    <p>
+                        @(item.Story.Length > 110
+                                            ? item.Story[..110] + "…"
+                                            : item.Story)
+                </p>
+
+                        <div class="d-flex gap-2 mt-3">
+
+                            <a asp-action="Edit"
+                               asp-route-id="@item.Id"
+                               class="form-link">
+                                Edit
+                            </a>
+
+                            <a asp-action="Delete"
+                               asp-route-id="@item.Id"
+                               class="form-link text-danger">
+                                Delete
+                            </a>
+
+                        </div>
+
+                    </div>
+
+                </article>
+
+            </div>
+        }
+
+    </div>
+}
+else
+{
+    <div class="feature-paper text-center">
+        <h3>No memories found</h3>
+        <p>Try another search or select a different category.</p>
+    </div>
+}
